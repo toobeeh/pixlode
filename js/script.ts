@@ -81,6 +81,10 @@ class ImageParticles{
         }
     }
 
+    refreshImageData(){
+        this.imageData = this.canvasContext.getImageData(0,0, this.canvas.width, this.canvas.height);
+    }
+
     setPixel(startIndex:number, r:number, g:number, b:number, a:number){
         this.imageData.data[startIndex] = r;
         this.imageData.data[startIndex+1] = g;
@@ -177,6 +181,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     const particles = new ImageParticles(canvas);
     while(true){
         await particles.burstRows(10,10,10);
-        await particles.burstSized(80, 0);
+        canvas.getContext("2d").drawImage(image, 0, 0);
+        particles.refreshImageData();
+        await particles.burstSized(40, 0);
+        canvas.getContext("2d").drawImage(image, 0, 0);
+        particles.refreshImageData();
     }
 });

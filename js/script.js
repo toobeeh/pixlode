@@ -117,6 +117,9 @@ var ImageParticles = /** @class */ (function () {
                 this.particleMap.push(null);
         }
     }
+    ImageParticles.prototype.refreshImageData = function () {
+        this.imageData = this.canvasContext.getImageData(0, 0, this.canvas.width, this.canvas.height);
+    };
     ImageParticles.prototype.setPixel = function (startIndex, r, g, b, a) {
         this.imageData.data[startIndex] = r;
         this.imageData.data[startIndex + 1] = g;
@@ -252,9 +255,13 @@ document.addEventListener("DOMContentLoaded", function () { return __awaiter(_th
                 return [4 /*yield*/, particles.burstRows(10, 10, 10)];
             case 3:
                 _a.sent();
-                return [4 /*yield*/, particles.burstSized(80, 0)];
+                canvas.getContext("2d").drawImage(image, 0, 0);
+                particles.refreshImageData();
+                return [4 /*yield*/, particles.burstSized(40, 0)];
             case 4:
                 _a.sent();
+                canvas.getContext("2d").drawImage(image, 0, 0);
+                particles.refreshImageData();
                 return [3 /*break*/, 2];
             case 5: return [2 /*return*/];
         }
