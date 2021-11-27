@@ -1,0 +1,27 @@
+body{
+    padding:0;
+    background-color: black;
+    color:white;
+    display: grid;
+    flex-direction: column;
+    place-content:center;
+    font-family: "Consolas";
+}
+
+particle{
+    display:block;
+    position:fixed;
+}
+
+header h1{
+    text-align: center;
+}
+
+main canvas{
+    margin: 10%;
+    width:80%;
+    box-sizing: border-box;
+    image-rendering: pixelated;
+}
+
+#preload{display:none}
