@@ -324,7 +324,33 @@ class ImageParticles{
     }
 }
 
+
+const getBurstConfig = () =>{
+    const burstConfig:BurstConfiguration = {
+        groupTimeout: Number.parseInt((document.querySelector("#bcTimeout") as HTMLInputElement).value),
+        groupSplits: Number.parseInt((document.querySelector("#bcSplits") as HTMLInputElement).value),
+        fragmentWidth: Number.parseInt((document.querySelector("#bcWidth") as HTMLInputElement).value),
+        fragmentHeight: Number.parseInt((document.querySelector("#bcHeight") as HTMLInputElement).value)
+    }
+    return burstConfig;
+}
+
+const getAnimationConfig = () =>{
+    const animationConfig:AnimationConfiguration = {
+        time: Number.parseInt((document.querySelector("#acTime") as HTMLInputElement).value),
+        distance: Number.parseInt((document.querySelector("#acDistance") as HTMLInputElement).value),
+        function: (document.querySelector("#acFunction") as HTMLInputElement).value,
+        down: (document.querySelector("#acDown") as HTMLInputElement).checked,
+        left: (document.querySelector("#acLeft") as HTMLInputElement).checked,
+        right: (document.querySelector("#acRight") as HTMLInputElement).checked
+    }
+    return animationConfig;
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
+    const playBtn:HTMLInputElement = document.querySelector("#play");
+    playBtn.disabled = true;
+
     const query: string = window.location.search.substr(1);
     const image: HTMLImageElement = await getImageFromURL(query);
     const canvas: HTMLCanvasElement = document.querySelector("body main canvas");
@@ -333,20 +359,29 @@ document.addEventListener("DOMContentLoaded", async () => {
     canvas.getContext("2d").drawImage(image, 0, 0);
     const particles = new ImageParticles(canvas);
     
-    const config:BurstConfiguration = {
-        groupTimeout:20,
-        groupSplits:66,
-        fragmentWidth:10,
-        fragmentHeight:10
-    }
-    
-    while(true){
-        await particles.burstDown(config);
-        //await particles.burstRandom(config);
-        //await particles.burstColors(config);
+    playBtn.disabled = false;
+    playBtn.addEventListener("click", async ()=>{
+        playBtn.disabled = true;
+
+        const burstConfig:BurstConfiguration = getBurstConfig();
+        const animationConfig:AnimationConfiguration = getAnimationConfig();
+        particles.setAnimationConfiguration(animationConfig);
+
+        const target:string = (document.querySelector("#playSelect") as HTMLInputElement).value;
+        switch(target){
+            case "row":
+                await particles.burstDown(burstConfig);
+                break;
+            case "random":
+                await particles.burstRandom(burstConfig);
+                break;
+            case "color":
+                await particles.burstColors(burstConfig);
+                break;
+        }
         await waitMs(4000);
-        break;
-        // canvas.getContext("2d").drawImage(image, 0, 0);
-        // particles.refreshImageData();
-    }
+        canvas.getContext("2d").drawImage(image, 0, 0);
+        particles.refreshImageData();
+        playBtn.disabled = false;
+    });
 });

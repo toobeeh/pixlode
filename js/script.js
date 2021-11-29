@@ -415,11 +415,34 @@ var ImageParticles = /** @class */ (function () {
     };
     return ImageParticles;
 }());
+var getBurstConfig = function () {
+    var burstConfig = {
+        groupTimeout: Number.parseInt(document.querySelector("#bcTimeout").value),
+        groupSplits: Number.parseInt(document.querySelector("#bcSplits").value),
+        fragmentWidth: Number.parseInt(document.querySelector("#bcWidth").value),
+        fragmentHeight: Number.parseInt(document.querySelector("#bcHeight").value)
+    };
+    return burstConfig;
+};
+var getAnimationConfig = function () {
+    var animationConfig = {
+        time: Number.parseInt(document.querySelector("#acTime").value),
+        distance: Number.parseInt(document.querySelector("#acDistance").value),
+        function: document.querySelector("#acFunction").value,
+        down: document.querySelector("#acDown").checked,
+        left: document.querySelector("#acLeft").checked,
+        right: document.querySelector("#acRight").checked
+    };
+    return animationConfig;
+};
 document.addEventListener("DOMContentLoaded", function () { return __awaiter(_this, void 0, void 0, function () {
-    var query, image, canvas, particles, config;
+    var playBtn, query, image, canvas, particles;
+    var _this = this;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
+                playBtn = document.querySelector("#play");
+                playBtn.disabled = true;
                 query = window.location.search.substr(1);
                 return [4 /*yield*/, getImageFromURL(query)];
             case 1:
@@ -429,27 +452,47 @@ document.addEventListener("DOMContentLoaded", function () { return __awaiter(_th
                 canvas.height = image.height;
                 canvas.getContext("2d").drawImage(image, 0, 0);
                 particles = new ImageParticles(canvas);
-                config = {
-                    groupTimeout: 20,
-                    groupSplits: 66,
-                    fragmentWidth: 10,
-                    fragmentHeight: 10
-                };
-                _a.label = 2;
-            case 2:
-                if (!true) return [3 /*break*/, 5];
-                return [4 /*yield*/, particles.burstDown(config)];
-            case 3:
-                _a.sent();
-                //await particles.burstRandom(config);
-                //await particles.burstColors(config);
-                return [4 /*yield*/, waitMs(4000)];
-            case 4:
-                //await particles.burstRandom(config);
-                //await particles.burstColors(config);
-                _a.sent();
-                return [3 /*break*/, 5];
-            case 5: return [2 /*return*/];
+                playBtn.disabled = false;
+                playBtn.addEventListener("click", function () { return __awaiter(_this, void 0, void 0, function () {
+                    var burstConfig, animationConfig, target, _a;
+                    return __generator(this, function (_b) {
+                        switch (_b.label) {
+                            case 0:
+                                playBtn.disabled = true;
+                                burstConfig = getBurstConfig();
+                                animationConfig = getAnimationConfig();
+                                particles.setAnimationConfiguration(animationConfig);
+                                target = document.querySelector("#playSelect").value;
+                                _a = target;
+                                switch (_a) {
+                                    case "row": return [3 /*break*/, 1];
+                                    case "random": return [3 /*break*/, 3];
+                                    case "color": return [3 /*break*/, 5];
+                                }
+                                return [3 /*break*/, 7];
+                            case 1: return [4 /*yield*/, particles.burstDown(burstConfig)];
+                            case 2:
+                                _b.sent();
+                                return [3 /*break*/, 7];
+                            case 3: return [4 /*yield*/, particles.burstRandom(burstConfig)];
+                            case 4:
+                                _b.sent();
+                                return [3 /*break*/, 7];
+                            case 5: return [4 /*yield*/, particles.burstColors(burstConfig)];
+                            case 6:
+                                _b.sent();
+                                return [3 /*break*/, 7];
+                            case 7: return [4 /*yield*/, waitMs(4000)];
+                            case 8:
+                                _b.sent();
+                                canvas.getContext("2d").drawImage(image, 0, 0);
+                                particles.refreshImageData();
+                                playBtn.disabled = false;
+                                return [2 /*return*/];
+                        }
+                    });
+                }); });
+                return [2 /*return*/];
         }
     });
 }); });
