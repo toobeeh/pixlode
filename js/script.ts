@@ -348,40 +348,40 @@ const getAnimationConfig = () =>{
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-    const playBtn:HTMLInputElement = document.querySelector("#play");
-    playBtn.disabled = true;
+    // const playBtn:HTMLInputElement = document.querySelector("#play");
+    // playBtn.disabled = true;
 
-    const query: string = window.location.search.substr(1);
-    const image: HTMLImageElement = await getImageFromURL(query);
-    const canvas: HTMLCanvasElement = document.querySelector("body main canvas");
-    canvas.width = image.width;
-    canvas.height = image.height;
-    canvas.getContext("2d").drawImage(image, 0, 0);
-    const particles = new ImageParticles(canvas);
+    // const query: string = window.location.search.substr(1);
+    // const image: HTMLImageElement = await getImageFromURL(query);
+    // const canvas: HTMLCanvasElement = document.querySelector("body main canvas");
+    // canvas.width = image.width;
+    // canvas.height = image.height;
+    // canvas.getContext("2d").drawImage(image, 0, 0);
+    // const particles = new ImageParticles(canvas);
     
-    playBtn.disabled = false;
-    playBtn.addEventListener("click", async ()=>{
-        playBtn.disabled = true;
+    // playBtn.disabled = false;
+    // playBtn.addEventListener("click", async ()=>{
+    //     playBtn.disabled = true;
 
-        const burstConfig:BurstConfiguration = getBurstConfig();
-        const animationConfig:AnimationConfiguration = getAnimationConfig();
-        particles.setAnimationConfiguration(animationConfig);
+    //     const burstConfig:BurstConfiguration = getBurstConfig();
+    //     const animationConfig:AnimationConfiguration = getAnimationConfig();
+    //     particles.setAnimationConfiguration(animationConfig);
 
-        const target:string = (document.querySelector("#playSelect") as HTMLInputElement).value;
-        // switch(target){
-        //     case "row":
-        //         await particles.burstDown(burstConfig);
-        //         break;
-        //     case "random":
-        //         await particles.burstRandom(burstConfig);
-        //         break;
-        //     case "color":
-        //         await particles.burstColors(burstConfig);
-        //         break;
-        // }
-        await waitMs(4000);
-        canvas.getContext("2d").drawImage(image, 0, 0);
-        particles.refreshImageData();
-        playBtn.disabled = false;
-    });
+    //     const target:string = (document.querySelector("#playSelect") as HTMLInputElement).value;
+    //     switch(target){
+    //         case "row":
+    //             await particles.burstDown(burstConfig);
+    //             break;
+    //         case "random":
+    //             await particles.burstRandom(burstConfig);
+    //             break;
+    //         case "color":
+    //             await particles.burstColors(burstConfig);
+    //             break;
+    //     }
+    //     await waitMs(4000);
+    //     canvas.getContext("2d").drawImage(image, 0, 0);
+    //     particles.refreshImageData();
+    //     playBtn.disabled = false;
+    // });
 });
