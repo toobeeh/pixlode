@@ -301,22 +301,22 @@ document.addEventListener("DOMContentLoaded", async () => {
         const burstConfig = getBurstConfig();
         const animationConfig = getAnimationConfig();
         particles.setAnimationConfiguration(animationConfig);
-        //     const target:string = (document.querySelector("#playSelect") as HTMLInputElement).value;
-        //     switch(target){
-        //         case "row":
-        //             await particles.burstDown(burstConfig);
-        //             break;
-        //         case "random":
-        //             await particles.burstRandom(burstConfig);
-        //             break;
-        //         case "color":
-        //             await particles.burstColors(burstConfig);
-        //             break;
-        //     }
-        //     await waitMs(4000);
-        //     canvas.getContext("2d").drawImage(image, 0, 0);
-        //     particles.refreshImageData();
-        //     playBtn.disabled = false;
+        const target = document.querySelector("#playSelect").value;
+        switch (target) {
+            case "row":
+                await particles.burstDown(burstConfig);
+                break;
+            case "random":
+                await particles.burstRandom(burstConfig);
+                break;
+            case "color":
+                await particles.burstColors(burstConfig);
+                break;
+        }
+        await waitMs(4000);
+        canvas.getContext("2d").drawImage(image, 0, 0);
+        particles.refreshImageData();
+        playBtn.disabled = false;
     });
 });
 //# sourceMappingURL=script.js.map
