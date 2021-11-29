@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
-    "sourceMap": true,
-    "target":"ES2020"
+    "module": "esnext",
+      "removeComments": true,
+      "preserveConstEnums": true,
+      "sourceMap": true,
+      "target": "esnext"
   }
 }
