@@ -19,9 +19,16 @@ main{
     grid-template-rows: 1fr 1fr 1fr;
     grid-template-columns: 1fr 4fr;
 }
+@media screen 
+  and (max-device-width: 1200px) {
+    main{
+        dispaly:flex;
+        flex-direction: column;
+    } 
+}
 
 header h1{
-    height:10vh;
+    min-height:10vh;
     text-align: center;
     background-image: linear-gradient(120deg, #fccb90 0%, #d57eeb 100%);
     -webkit-background-clip: text;
