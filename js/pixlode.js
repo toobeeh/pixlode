@@ -111,7 +111,7 @@ class ImageParticles {
         particle.setSize(width, height);
         particle.animationTime = this.animationConfig.time;
         particle.animationFunction = this.animationConfig.function;
-        particle.animate(300, startX, startY, this.animationConfig.down, this.animationConfig.left, this.animationConfig.right);
+        particle.animate(this.animationConfig.distance, startX, startY, this.animationConfig.down, this.animationConfig.left, this.animationConfig.right);
     }
     getCanvasPixelProperties() {
         const { x, y, width, height } = this.canvas.getBoundingClientRect();
