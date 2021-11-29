@@ -359,8 +359,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     canvas.getContext("2d").drawImage(image, 0, 0);
     const particles = new ImageParticles(canvas);
     
-    // playBtn.disabled = false;
-    // playBtn.addEventListener("click", async ()=>{
+    playBtn.disabled = false;
+    playBtn.addEventListener("click", async ()=>{
     //     playBtn.disabled = true;
 
     //     const burstConfig:BurstConfiguration = getBurstConfig();
@@ -383,5 +383,5 @@ document.addEventListener("DOMContentLoaded", async () => {
     //     canvas.getContext("2d").drawImage(image, 0, 0);
     //     particles.refreshImageData();
     //     playBtn.disabled = false;
-    // });
+    });
 });
