@@ -74,7 +74,7 @@ var Particle = /** @class */ (function () {
         if (right === void 0) { right = true; }
         document.body.appendChild(this.object);
         var directionY = Math.random() > 0.5 && down ? 1 : -1;
-        var directionX = left && right ? (Math.random() > 0.5 && right && !left ? 1 : -1) : 0;
+        var directionX = left && right ? (Math.random() > 0.5 ? 1 : -1) : left ? -1 : right ? 1 : 0;
         var dY = Math.random() * distance;
         var dX = Math.sqrt(Math.pow(distance, 2) - Math.pow(dY, 2));
         var animation = this.object.animate([
@@ -96,12 +96,31 @@ var Particle = /** @class */ (function () {
     };
     return Particle;
 }());
+var ParticlePosition = /** @class */ (function () {
+    function ParticlePosition(particle, index, rgba) {
+        this.particle = particle;
+        this.index = index;
+        this.rgba = rgba;
+    }
+    return ParticlePosition;
+}());
 var ImageParticles = /** @class */ (function () {
-    function ImageParticles(imageCanvas) {
+    function ImageParticles(imageCanvas, animationConfiguration) {
+        if (animationConfiguration === void 0) { animationConfiguration = null; }
         this.particleMap = [];
+        this.animationConfig = {
+            time: 1000,
+            distance: 100,
+            function: "ease-out",
+            down: false,
+            left: false,
+            right: false
+        };
         this.canvas = imageCanvas;
         this.canvasContext = this.canvas.getContext("2d");
         this.imageData = this.canvasContext.getImageData(0, 0, this.canvas.width, this.canvas.height);
+        if (animationConfiguration != null)
+            this.animationConfig = animationConfiguration;
         for (var index = 0; index < this.imageData.data.length; index += 4) {
             var rgbArray = [
                 this.imageData.data[index],
@@ -110,9 +129,9 @@ var ImageParticles = /** @class */ (function () {
                 this.imageData.data[index + 3]
             ];
             var color = "rgba(" + rgbArray[0] + "," + rgbArray[1] + "," + rgbArray[2] + "," + rgbArray[3] + ")";
-            var pushObj = { particle: new Particle(color, 10, 10), index: index, rgba: rgbArray };
+            var particlePosition = new ParticlePosition(new Particle(color, 10, 10), index, rgbArray);
             if (rgbArray[3] > 0)
-                this.particleMap.push(pushObj);
+                this.particleMap.push(particlePosition);
             else
                 this.particleMap.push(null);
         }
@@ -120,113 +139,274 @@ var ImageParticles = /** @class */ (function () {
     ImageParticles.prototype.refreshImageData = function () {
         this.imageData = this.canvasContext.getImageData(0, 0, this.canvas.width, this.canvas.height);
     };
+    ImageParticles.prototype.setAnimationConfiguration = function (config) {
+        this.animationConfig = config;
+    };
     ImageParticles.prototype.setPixel = function (startIndex, r, g, b, a) {
+        var wasTransparent = this.imageData.data[startIndex + 3] == 0;
         this.imageData.data[startIndex] = r;
         this.imageData.data[startIndex + 1] = g;
         this.imageData.data[startIndex + 2] = b;
         this.imageData.data[startIndex + 3] = a;
+        return wasTransparent;
     };
-    // async burst(batches: number, timeout:number){
-    //     const {x, y, width, height} = this.canvas.getBoundingClientRect();
-    //     const canvasPixelPerWidth = width / this.canvas.width;
-    //     const canvasPixelPerHeight = height / this.canvas.height;
-    //     const map = this.particleMap.filter(particle => particle != null);
-    //     for (let index = 0; index < map.length; index+=batches) {
-    //         for(let batchIndex = 0; batchIndex < batches; batchIndex++){
-    //             const pixel = map[index + batchIndex];
-    //             const row = Math.floor((pixel.index / 4) / this.canvas.width);
-    //             const col = (pixel.index/4) % this.canvas.width;
-    //             const startX = x + canvasPixelPerWidth * col;
-    //             const startY = y + canvasPixelPerHeight * row + window.scrollY;
-    //             this.setPixel(pixel.index, 0, 0, 0, 0);
-    //             pixel.particle.animate(70, startX,startY, false, false, false);
-    //         }
-    //         this.canvasContext.putImageData(this.imageData, 0, 0);
-    //         await waitMs(timeout);
-    //     }
-    // }
-    ImageParticles.prototype.burstSized = function (blockSize, timeout) {
+    ImageParticles.prototype.getPixel = function (startIndex) {
+        return [
+            this.imageData.data[startIndex],
+            this.imageData.data[startIndex + 1],
+            this.imageData.data[startIndex + 2],
+            this.imageData.data[startIndex + 3]
+        ];
+    };
+    ImageParticles.prototype.animateParticle = function (particle, startX, startY, width, height) {
+        particle.setSize(width, height);
+        particle.animationTime = this.animationConfig.time;
+        particle.animationFunction = this.animationConfig.function;
+        particle.animate(300, startX, startY, this.animationConfig.down, this.animationConfig.left, this.animationConfig.right);
+    };
+    ImageParticles.prototype.getCanvasPixelProperties = function () {
+        var _a = this.canvas.getBoundingClientRect(), x = _a.x, y = _a.y, width = _a.width, height = _a.height;
+        var canvasPixelPerWidth = width / this.canvas.width;
+        var canvasPixelPerHeight = height / this.canvas.height;
+        return { x: x, y: y, width: width, height: height, canvasPixelPerWidth: canvasPixelPerWidth, canvasPixelPerHeight: canvasPixelPerHeight };
+    };
+    ImageParticles.prototype.getFragmentFromCanvasMatrix = function (startPixelIndex, fragmentWidth, fragmentHeight, canvasMatrix) {
+        var indexArray = [];
+        for (var row = 0; row < fragmentHeight; row++) {
+            for (var col = 0; col < fragmentWidth; col++) {
+                indexArray.push(startPixelIndex + row * this.canvas.width + col);
+            }
+        }
+        return indexArray;
+    };
+    ImageParticles.prototype.calculatePagePosition = function (canvasProps, canvasDataArrayIndex) {
+        var startX = canvasProps.x + canvasProps.canvasPixelPerWidth * ((canvasDataArrayIndex / 4) % this.canvas.width);
+        var startY = canvasProps.y + canvasProps.canvasPixelPerHeight * Math.floor((canvasDataArrayIndex / 4) / this.canvas.width);
+        return { x: startX, y: startY };
+    };
+    ImageParticles.prototype.burstDown = function (config) {
         return __awaiter(this, void 0, void 0, function () {
-            var _a, x, y, width, height, canvasPixelPerWidth, canvasPixelPerHeight, rowIndex, colIndex, pixel, startX, startY, blockX, blockY;
+            var _a, x, y, width, height, canvasProps, fragmentHeight, fragmentWidth, groupSplits, groupTimeout, rowIndex, colIndex, pixel, startX, startY, blockX, blockY;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
                         _a = this.canvas.getBoundingClientRect(), x = _a.x, y = _a.y, width = _a.width, height = _a.height;
-                        canvasPixelPerWidth = width / this.canvas.width;
-                        canvasPixelPerHeight = height / this.canvas.height;
+                        canvasProps = this.getCanvasPixelProperties();
+                        fragmentHeight = config.fragmentHeight, fragmentWidth = config.fragmentWidth, groupSplits = config.groupSplits, groupTimeout = config.groupTimeout;
                         rowIndex = 0;
                         _b.label = 1;
                     case 1:
-                        if (!(rowIndex < this.canvas.height)) return [3 /*break*/, 6];
+                        if (!(rowIndex < this.canvas.height)) return [3 /*break*/, 8];
                         colIndex = 0;
                         _b.label = 2;
                     case 2:
                         if (!(colIndex < this.canvas.width)) return [3 /*break*/, 5];
                         pixel = this.particleMap[rowIndex * this.canvas.width + colIndex];
-                        startX = x + canvasPixelPerWidth * colIndex;
-                        startY = y + canvasPixelPerHeight * rowIndex - blockSize;
-                        for (blockX = 0; blockX < blockSize; blockX++) {
-                            for (blockY = 0; blockY < blockSize; blockY++) {
+                        startX = x + canvasProps.canvasPixelPerWidth * colIndex - fragmentWidth;
+                        startY = y + canvasProps.canvasPixelPerHeight * rowIndex;
+                        // set pixels of fragment
+                        for (blockX = 0; blockX < fragmentWidth; blockX++) {
+                            for (blockY = 0; blockY < fragmentHeight; blockY++) {
                                 this.setPixel(rowIndex * this.canvas.width * 4 + colIndex * 4 + blockY * this.canvas.width * 4 + blockX * 4, 0, 0, 0, 0);
                             }
                         }
-                        if (!(pixel != null)) return [3 /*break*/, 4];
-                        pixel.particle.setSize(blockSize, blockSize);
-                        pixel.particle.animationTime = 2000;
-                        pixel.particle.animationFunction = "ease-out";
-                        pixel.particle.animate(70, startX, startY, false, false, false);
+                        // create pixel fragment animation
+                        if (pixel != null) {
+                            this.animateParticle(pixel.particle, startX, startY, fragmentWidth * canvasProps.canvasPixelPerWidth, fragmentHeight * canvasProps.canvasPixelPerHeight);
+                        }
+                        if (!(pixel && (colIndex * groupSplits) % (this.canvas.width - (this.canvas.width % fragmentWidth)) == 0)) return [3 /*break*/, 4];
                         this.canvasContext.putImageData(this.imageData, 0, 0);
-                        return [4 /*yield*/, waitMs(timeout)];
+                        return [4 /*yield*/, waitMs(groupTimeout)];
                     case 3:
                         _b.sent();
                         _b.label = 4;
                     case 4:
-                        colIndex += blockSize;
+                        colIndex += fragmentWidth;
                         return [3 /*break*/, 2];
                     case 5:
-                        rowIndex += blockSize;
+                        this.canvasContext.putImageData(this.imageData, 0, 0);
+                        return [4 /*yield*/, waitMs(groupTimeout)];
+                    case 6:
+                        _b.sent();
+                        _b.label = 7;
+                    case 7:
+                        rowIndex += fragmentHeight;
                         return [3 /*break*/, 1];
-                    case 6: return [2 /*return*/];
+                    case 8: return [2 /*return*/];
                 }
             });
         });
     };
-    ImageParticles.prototype.burstRows = function (rowHeight, fragmentWidth, timeout) {
+    ImageParticles.prototype.burstRandom = function (config) {
         return __awaiter(this, void 0, void 0, function () {
-            var _a, x, y, width, height, canvasPixelPerWidth, canvasPixelPerHeight, rowIndex, colIndex, pixel, startX, startY, blockX, blockY;
+            var fragmentHeight, fragmentWidth, groupSplits, groupTimeout, canvasProps, particleMatrix, i, leftMatrixEntries, totalEntries, removeBuffer, _loop_1, this_1;
+            var _this = this;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        fragmentHeight = config.fragmentHeight, fragmentWidth = config.fragmentWidth, groupSplits = config.groupSplits, groupTimeout = config.groupTimeout;
+                        canvasProps = this.getCanvasPixelProperties();
+                        particleMatrix = new Array(this.canvas.width);
+                        for (i = 0; i < particleMatrix.length; i++)
+                            particleMatrix[i] = new Array(this.canvas.height);
+                        // map particles to particle matrix for faster processing
+                        this.particleMap.forEach(function (particlePosition, index) {
+                            if (particlePosition != null) {
+                                particleMatrix[(particlePosition.index / 4) % _this.canvas.width][Math.round((particlePosition.index / 4) / _this.canvas.width)] = index;
+                            }
+                        });
+                        leftMatrixEntries = particleMatrix.flat();
+                        totalEntries = this.particleMap.length;
+                        removeBuffer = 0;
+                        _loop_1 = function () {
+                            var randomIndex, particlePosition, deleteCount, fragmentIndexes, f, startPos;
+                            return __generator(this, function (_b) {
+                                switch (_b.label) {
+                                    case 0:
+                                        randomIndex = leftMatrixEntries[Math.floor(Math.random() * leftMatrixEntries.length)];
+                                        particlePosition = this_1.particleMap[randomIndex];
+                                        deleteCount = 0;
+                                        removeBuffer++;
+                                        fragmentIndexes = this_1.getFragmentFromCanvasMatrix(particlePosition.index / 4, fragmentWidth, fragmentHeight, particleMatrix);
+                                        leftMatrixEntries = leftMatrixEntries.filter(function (left) {
+                                            if (fragmentIndexes.some(function (index) { return index == left; })) {
+                                                if (!_this.setPixel(left * 4, 0, 0, 0, 0))
+                                                    deleteCount++;
+                                                return false;
+                                            }
+                                            else
+                                                return true;
+                                        });
+                                        this_1.canvasContext.putImageData(this_1.imageData, 0, 0);
+                                        f = deleteCount / fragmentIndexes.length * 2;
+                                        if (particlePosition != null) {
+                                            startPos = this_1.calculatePagePosition(canvasProps, particlePosition.index);
+                                            this_1.animateParticle(particlePosition.particle, startPos.x, startPos.y, fragmentWidth * f, fragmentHeight * f);
+                                        }
+                                        if (!(particlePosition != null && (removeBuffer * groupSplits) % (totalEntries - (totalEntries % fragmentWidth)) == 0)) return [3 /*break*/, 2];
+                                        this_1.canvasContext.putImageData(this_1.imageData, 0, 0);
+                                        return [4 /*yield*/, waitMs(groupTimeout)];
+                                    case 1:
+                                        _b.sent();
+                                        removeBuffer = 0;
+                                        _b.label = 2;
+                                    case 2: return [2 /*return*/];
+                                }
+                            });
+                        };
+                        this_1 = this;
+                        _a.label = 1;
+                    case 1:
+                        if (!(leftMatrixEntries.length > 0)) return [3 /*break*/, 3];
+                        return [5 /*yield**/, _loop_1()];
+                    case 2:
+                        _a.sent();
+                        return [3 /*break*/, 1];
+                    case 3:
+                        this.canvasContext.putImageData(this.imageData, 0, 0);
+                        return [4 /*yield*/, waitMs(groupTimeout)];
+                    case 4:
+                        _a.sent();
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    ImageParticles.prototype.burstColors = function (config) {
+        return __awaiter(this, void 0, void 0, function () {
+            var fragmentHeight, fragmentWidth, groupSplits, groupTimeout, canvasProps, particleMatrix, colorGroups, _loop_2, this_2, _i, _a, groupName;
+            var _this = this;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
-                        _a = this.canvas.getBoundingClientRect(), x = _a.x, y = _a.y, width = _a.width, height = _a.height;
-                        canvasPixelPerWidth = width / this.canvas.width;
-                        canvasPixelPerHeight = height / this.canvas.height;
-                        rowIndex = 0;
-                        _b.label = 1;
-                    case 1:
-                        if (!(rowIndex < this.canvas.height)) return [3 /*break*/, 4];
-                        for (colIndex = 0; colIndex < this.canvas.width; colIndex += fragmentWidth) {
-                            pixel = this.particleMap[rowIndex * this.canvas.width + colIndex];
-                            startX = x + canvasPixelPerWidth * colIndex - fragmentWidth;
-                            startY = y + canvasPixelPerHeight * rowIndex - rowHeight / 2;
-                            for (blockX = 0; blockX < fragmentWidth; blockX++) {
-                                for (blockY = 0; blockY < rowHeight; blockY++) {
-                                    this.setPixel(rowIndex * this.canvas.width * 4 + colIndex * 4 + blockY * this.canvas.width * 4 + blockX * 4, 0, 0, 0, 0);
+                        fragmentHeight = config.fragmentHeight, fragmentWidth = config.fragmentWidth, groupSplits = config.groupSplits, groupTimeout = config.groupTimeout;
+                        canvasProps = this.getCanvasPixelProperties();
+                        particleMatrix = new Array(this.canvas.width).fill([]);
+                        colorGroups = {};
+                        // map particles to particle matrix and color groups
+                        this.particleMap.forEach(function (particlePosition, index) {
+                            if (particlePosition != null) {
+                                particleMatrix[(particlePosition.index / 4) % _this.canvas.width][Math.round((particlePosition.index / 4) / _this.canvas.width)] = index;
+                                var colGroup = particlePosition.rgba.join("");
+                                if (colorGroups[colGroup])
+                                    colorGroups[colGroup].push(particlePosition);
+                                else {
+                                    colorGroups[colGroup] = [particlePosition];
                                 }
                             }
-                            if (pixel != null) {
-                                pixel.particle.setSize(fragmentWidth * canvasPixelPerWidth, rowHeight * canvasPixelPerHeight);
-                                pixel.particle.animationTime = 2000;
-                                pixel.particle.animationFunction = "ease-out";
-                                pixel.particle.animate(60, startX, startY, false, false, false);
-                            }
-                        }
-                        this.canvasContext.putImageData(this.imageData, 0, 0);
-                        return [4 /*yield*/, waitMs(timeout)];
+                        });
+                        _loop_2 = function (groupName) {
+                            var particles, groupDeleted, _loop_3, _c, particles_1, particlePosition;
+                            return __generator(this, function (_d) {
+                                switch (_d.label) {
+                                    case 0:
+                                        particles = colorGroups[groupName];
+                                        groupDeleted = 0;
+                                        _loop_3 = function (particlePosition) {
+                                            var deleteCount, fragmentIndexes, f, startPos;
+                                            return __generator(this, function (_e) {
+                                                switch (_e.label) {
+                                                    case 0:
+                                                        deleteCount = 0;
+                                                        groupDeleted++;
+                                                        fragmentIndexes = this_2.getFragmentFromCanvasMatrix(particlePosition.index / 4, fragmentWidth, fragmentHeight, particleMatrix);
+                                                        fragmentIndexes.forEach(function (index) {
+                                                            if (index != null) {
+                                                                if (_this.getPixel(index * 4).join("") == groupName)
+                                                                    if (!_this.setPixel(index * 4, 0, 0, 0, 0))
+                                                                        deleteCount++;
+                                                                ;
+                                                                index = null;
+                                                            }
+                                                        });
+                                                        f = (deleteCount * fragmentWidth) / fragmentIndexes.length;
+                                                        if (particlePosition != null) {
+                                                            startPos = this_2.calculatePagePosition(canvasProps, particlePosition.index);
+                                                            this_2.animateParticle(particlePosition.particle, startPos.x, startPos.y, fragmentWidth * f, fragmentHeight * f);
+                                                        }
+                                                        if (!(particlePosition != null && (groupDeleted * groupSplits) % (particles.length - (particles.length % fragmentWidth)) == 0)) return [3 /*break*/, 2];
+                                                        this_2.canvasContext.putImageData(this_2.imageData, 0, 0);
+                                                        return [4 /*yield*/, waitMs(groupTimeout)];
+                                                    case 1:
+                                                        _e.sent();
+                                                        _e.label = 2;
+                                                    case 2: return [2 /*return*/];
+                                                }
+                                            });
+                                        };
+                                        _c = 0, particles_1 = particles;
+                                        _d.label = 1;
+                                    case 1:
+                                        if (!(_c < particles_1.length)) return [3 /*break*/, 4];
+                                        particlePosition = particles_1[_c];
+                                        return [5 /*yield**/, _loop_3(particlePosition)];
+                                    case 2:
+                                        _d.sent();
+                                        _d.label = 3;
+                                    case 3:
+                                        _c++;
+                                        return [3 /*break*/, 1];
+                                    case 4:
+                                        this_2.canvasContext.putImageData(this_2.imageData, 0, 0);
+                                        return [4 /*yield*/, waitMs(groupTimeout)];
+                                    case 5:
+                                        _d.sent();
+                                        return [2 /*return*/];
+                                }
+                            });
+                        };
+                        this_2 = this;
+                        _i = 0, _a = Object.keys(colorGroups);
+                        _b.label = 1;
+                    case 1:
+                        if (!(_i < _a.length)) return [3 /*break*/, 4];
+                        groupName = _a[_i];
+                        return [5 /*yield**/, _loop_2(groupName)];
                     case 2:
                         _b.sent();
                         _b.label = 3;
                     case 3:
-                        rowIndex += rowHeight;
+                        _i++;
                         return [3 /*break*/, 1];
                     case 4: return [2 /*return*/];
                 }
@@ -236,7 +416,7 @@ var ImageParticles = /** @class */ (function () {
     return ImageParticles;
 }());
 document.addEventListener("DOMContentLoaded", function () { return __awaiter(_this, void 0, void 0, function () {
-    var query, image, canvas, particles;
+    var query, image, canvas, particles, config;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
@@ -249,20 +429,26 @@ document.addEventListener("DOMContentLoaded", function () { return __awaiter(_th
                 canvas.height = image.height;
                 canvas.getContext("2d").drawImage(image, 0, 0);
                 particles = new ImageParticles(canvas);
+                config = {
+                    groupTimeout: 20,
+                    groupSplits: 66,
+                    fragmentWidth: 10,
+                    fragmentHeight: 10
+                };
                 _a.label = 2;
             case 2:
                 if (!true) return [3 /*break*/, 5];
-                return [4 /*yield*/, particles.burstRows(10, 10, 10)];
+                return [4 /*yield*/, particles.burstDown(config)];
             case 3:
                 _a.sent();
-                canvas.getContext("2d").drawImage(image, 0, 0);
-                particles.refreshImageData();
-                return [4 /*yield*/, particles.burstSized(40, 0)];
+                //await particles.burstRandom(config);
+                //await particles.burstColors(config);
+                return [4 /*yield*/, waitMs(4000)];
             case 4:
+                //await particles.burstRandom(config);
+                //await particles.burstColors(config);
                 _a.sent();
-                canvas.getContext("2d").drawImage(image, 0, 0);
-                particles.refreshImageData();
-                return [3 /*break*/, 2];
+                return [3 /*break*/, 5];
             case 5: return [2 /*return*/];
         }
     });
