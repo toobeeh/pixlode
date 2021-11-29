@@ -361,11 +361,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     
     playBtn.disabled = false;
     playBtn.addEventListener("click", async ()=>{
-    //     playBtn.disabled = true;
+        playBtn.disabled = true;
 
-    //     const burstConfig:BurstConfiguration = getBurstConfig();
-    //     const animationConfig:AnimationConfiguration = getAnimationConfig();
-    //     particles.setAnimationConfiguration(animationConfig);
+        const burstConfig:BurstConfiguration = getBurstConfig();
+        const animationConfig:AnimationConfiguration = getAnimationConfig();
+        //particles.setAnimationConfiguration(animationConfig);
 
     //     const target:string = (document.querySelector("#playSelect") as HTMLInputElement).value;
     //     switch(target){

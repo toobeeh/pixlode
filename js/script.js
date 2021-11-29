@@ -297,10 +297,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     const particles = new ImageParticles(canvas);
     playBtn.disabled = false;
     playBtn.addEventListener("click", async () => {
-        //     playBtn.disabled = true;
-        //     const burstConfig:BurstConfiguration = getBurstConfig();
-        //     const animationConfig:AnimationConfiguration = getAnimationConfig();
-        //     particles.setAnimationConfiguration(animationConfig);
+        playBtn.disabled = true;
+        const burstConfig = getBurstConfig();
+        const animationConfig = getAnimationConfig();
+        //particles.setAnimationConfiguration(animationConfig);
         //     const target:string = (document.querySelector("#playSelect") as HTMLInputElement).value;
         //     switch(target){
         //         case "row":
