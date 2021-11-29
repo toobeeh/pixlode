@@ -300,7 +300,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         playBtn.disabled = true;
         const burstConfig = getBurstConfig();
         const animationConfig = getAnimationConfig();
-        //particles.setAnimationConfiguration(animationConfig);
+        particles.setAnimationConfiguration(animationConfig);
         //     const target:string = (document.querySelector("#playSelect") as HTMLInputElement).value;
         //     switch(target){
         //         case "row":

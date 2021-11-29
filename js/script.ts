@@ -365,7 +365,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const burstConfig:BurstConfiguration = getBurstConfig();
         const animationConfig:AnimationConfiguration = getAnimationConfig();
-        //particles.setAnimationConfiguration(animationConfig);
+        particles.setAnimationConfiguration(animationConfig);
 
     //     const target:string = (document.querySelector("#playSelect") as HTMLInputElement).value;
     //     switch(target){
