@@ -348,16 +348,16 @@ const getAnimationConfig = () =>{
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-    // const playBtn:HTMLInputElement = document.querySelector("#play");
-    // playBtn.disabled = true;
+    const playBtn:HTMLInputElement = document.querySelector("#play");
+    playBtn.disabled = true;
 
-    // const query: string = window.location.search.substr(1);
-    // const image: HTMLImageElement = await getImageFromURL(query);
-    // const canvas: HTMLCanvasElement = document.querySelector("body main canvas");
-    // canvas.width = image.width;
-    // canvas.height = image.height;
-    // canvas.getContext("2d").drawImage(image, 0, 0);
-    // const particles = new ImageParticles(canvas);
+    const query: string = window.location.search.substr(1);
+    const image: HTMLImageElement = await getImageFromURL(query);
+    const canvas: HTMLCanvasElement = document.querySelector("body main canvas");
+    canvas.width = image.width;
+    canvas.height = image.height;
+    canvas.getContext("2d").drawImage(image, 0, 0);
+    const particles = new ImageParticles(canvas);
     
     // playBtn.disabled = false;
     // playBtn.addEventListener("click", async ()=>{
