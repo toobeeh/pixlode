@@ -313,10 +313,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                 await particles.burstColors(burstConfig);
                 break;
         }
-        await waitMs(4000);
-        canvas.getContext("2d").drawImage(image, 0, 0);
-        particles.refreshImageData();
-        playBtn.disabled = false;
+        // await waitMs(4000);
+        // canvas.getContext("2d").drawImage(image, 0, 0);
+        // particles.refreshImageData();
+        // playBtn.disabled = false;
     });
 });
 //# sourceMappingURL=script.js.map
